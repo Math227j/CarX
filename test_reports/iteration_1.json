@@ -1,0 +1,55 @@
+{
+  "summary": "Flash CarX full-stack testing (Iteration 1 - first pass). Backend: 30/30 pytest tests passed covering auth, washes CRUD, stats/dashboard, analytics, users search, friend request/accept/reject/remove, ranking (daily/weekly/monthly x earnings/revenue/washes), achievements, feed. Frontend: verified splash→login redirect, register→home flow, login (valid/invalid), Home (Hoje) with earnings hero + stats + add wash bottom sheet + delete wash, Ranking tab (chips + entries), Amigos flow (list→Adicionar Amigo→search 'tester2'→send request→shows 'Pendente'), Profile tab (banner, level/XP, stats grid, menu items, achievements strip), History tab (filters + summary + list), Goals and Settings screens open. Only UX concern: Add Wash bottom sheet's save button lies below the fold on 390x844 viewport — element required scroll_into_view before it was clickable (still clickable via scroll, but not ideal on small phones).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "Home (Hoje) - Add Wash bottom sheet",
+        "issue": "'Salvar' button (testID save-wash-button) is rendered below the viewport on 390x844 (iPhone 12/13 mini) and only becomes clickable after scrolling. The bottom sheet content should be wrapped in a ScrollView or the sheet should size responsively / respect keyboard. Reference: /app/frontend/app/(tabs)/index.tsx (modal section around save-wash-button).",
+        "testID": "save-wash-button",
+        "priority": "MEDIUM"
+      }
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Add Wash bottom sheet",
+        "issues": [
+          "Modal not scrollable / not KeyboardAvoidingView-wrapped; on smaller phones the save button is out of the viewport when keyboard is open."
+        ]
+      }
+    ],
+    "react_native_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_flashcarx_api.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "(Optional UX) Wrap the Nova Lavagem bottom-sheet body in a ScrollView (or increase max-height / KeyboardAvoidingView) so the 'Salvar Lavagem' button remains visible above the keyboard on smaller devices (390x844)."
+  ],
+  "critical_code_review_comments": [
+    "server.py get_current_user correctly excludes _id and password_hash — good.",
+    "All Mongo queries in server.py use projection {\"_id\": 0} — good, no ObjectId leak.",
+    "server.py uses env vars for MONGO_URL/DB_NAME with no defaults (fail-fast) — good.",
+    "JWT_SECRET falls back to a hardcoded value; acceptable for preview but should be set via env in production.",
+    "Consider adding a POST/GET-only rate limit on /api/auth/register and login (nice-to-have).",
+    "Ranking correctly restricts to friends + self (no cross-user leakage)."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_flashcarx_api.py (new)",
+    "/app/test_reports/iteration_1.json (new)"
+  ],
+  "success_rate": {
+    "backend": "100%",
+    "frontend": "~95%"
+  },
+  "seed_data_creation": "Registered users tester1@test.com/pass123 (username: tester1) and tester2@test.com/pass123 (username: tester2) via UI/API. Pending friend request tester1 -> tester2 exists (not accepted in UI; acceptance already verified by backend pytest). Random 'tst1<hex>/tst2<hex>' users are created per pytest run.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Backend suite lives at /app/backend/tests/test_flashcarx_api.py; run with `pytest backend/tests/test_flashcarx_api.py -n 0 --junitxml=/app/test_reports/pytest/pytest_results.xml`. The pytest.ini enforces `-n 2 --dist loadscope` but session-scoped fixtures require serial (loadscope splits classes across workers and breaks shared user1/user2 fixtures) — pass `-n 0` to run serially. Test users tester1/tester2 already exist on preview backend. Preview URL: https://social-ranking-app.preview.emergentagent.com.",
+  "rca_of_issue": "N/A — no blocking bugs. UX note: Add Wash modal's save button sits below the viewport on small screens; wrap the modal body in ScrollView + KeyboardAvoidingView to fix."
+}
